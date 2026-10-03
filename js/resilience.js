@@ -59,7 +59,7 @@
     f: FORMULAS.map(([f, t, items]) => `<div class="rounded-lg bg-slate-800/70 p-3"><div class="flex flex-wrap items-baseline gap-x-3"><span class="font-mono text-[15px] font-semibold text-blue-200">${f}</span><span class="text-xs uppercase tracking-wide text-slate-400">${t}</span></div><ul class="mt-1 list-inside list-disc text-[13px] text-slate-300">${items.map(i => `<li>${i}</li>`).join('')}</ul></div>`).join(''),
     v: VOCAB.map(([t, d]) => `<div><dt class="font-semibold text-emerald-200">${t}</dt><dd class="text-[13px] text-slate-300">${d}</dd></div>`).join(''),
   };
-  LAB.register('res', { btn: 'tabRes', main: 'mainRes', hdr: 'hdrRes', title: 'Ensayo de resiliencia', grid: true, footer: resFooter,
+  LAB.register('res', { dlg: 'cfgR', btn: 'tabRes', main: 'mainRes', hdr: 'hdrRes', title: 'Ensayo de resiliencia', grid: true, footer: resFooter,
     pause: () => setPlaying(false), onShow: () => { render(); if (!S.started) { S.started = true; dlg.showModal(); } } });
 
   /* =================================================================
