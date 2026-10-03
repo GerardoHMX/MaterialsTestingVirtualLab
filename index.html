@@ -510,7 +510,7 @@
     <div class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
       <div>
         <h2 class="text-lg font-bold">Configurar ensayo</h2>
-        <p class="text-xs text-slate-500">Elige el ensayo, define la probeta, el material y los criterios de seguridad.</p>
+        <p class="text-xs text-slate-500">Define la máquina, la probeta, el material y los criterios de seguridad.</p>
       </div>
       <button type="button" id="cfgClose" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Cerrar">✕</button>
     </div>
@@ -518,14 +518,8 @@
     <div class="grid flex-1 gap-5 overflow-y-auto p-5 md:grid-cols-2 lg:grid-cols-4">
       <!-- 1 ensayo -->
       <div>
-        <h3 class="sec">1 · Ensayo</h3>
-        <div class="space-y-2 text-sm">
-          <label class="flex items-center gap-2 rounded-lg border-2 border-blue-500 bg-blue-50 p-2.5 font-semibold"><input type="radio" checked class="accent-blue-600"> Tracción <span class="ml-auto text-[10px] font-normal text-blue-700">UNE 7-474</span></label>
-          <div class="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5 text-slate-400">○ Dureza <span class="ml-auto text-[10px] text-blue-600">en su pestaña</span></div>
-          <div class="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5 text-slate-400">○ Resiliencia <span class="ml-auto text-[10px] text-blue-600">en su pestaña</span></div>
-          <div class="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5 text-slate-400">○ Fatiga <span class="ml-auto text-[10px] text-blue-600">en su pestaña</span></div>
-        </div>
-        <div class="mt-4">
+        <h3 class="sec">1 · Máquina</h3>
+        <div>
           <label class="lbl" for="vel">Velocidad de la cruceta (mm/min)</label>
           <input id="vel" type="number" min="0.1" step="any" value="5" class="inp">
           <p class="mt-1 text-[11px] text-slate-400">Solo afecta al «tiempo real» mostrado en la máquina.</p>
