@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Gerardo Huizar Castro">
+  <meta name="description" content="Simulador web de ensayos mecánicos de materiales: tracción, dureza (Brinell, Vickers, Rockwell), resiliencia (péndulo de Charpy) y fatiga. Visual, interactivo y paso a paso.">
+  <meta name="keywords" content="Laboratorio virtual, Ensayos mecánicos, Tracción, Dureza, Resiliencia, Fatiga">
+  <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow">
+  <meta name="google" content="notranslate">
+  <link rel="canonical" href="https://gerardohmx.github.io/MaterialsTestingVirtualLab/">
+	<meta property="og:locale" content="es_ES">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Laboratorio virtual · Ensayos mecánicos">
+	<meta property="og:description" content="Simulador web de ensayos mecánicos de materiales: tracción, dureza (Brinell, Vickers, Rockwell), resiliencia (péndulo de Charpy) y fatiga. Visual, interactivo y paso a paso.">
+	<meta property="og:url" content="https://gerardohmx.github.io/MaterialsTestingVirtualLab/">
+	<meta property="og:image" content="https://gerardohmx.github.io/MaterialsTestingVirtualLab/assets/og-image.png">
+	<meta property="og:image:type" content="image/png">
+	<meta property="og:image:alt" content="Laboratorio virtual de ensayos mecánicos: diagrama de tracción con las zonas elástica, de fluencia, endurecimiento y estricción">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:site_name" content="Laboratorio virtual · Ensayos mecánicos">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Laboratorio virtual · Ensayos mecánicos">
+	<meta name="twitter:description" content="Simulador web de ensayos mecánicos de materiales: tracción, dureza (Brinell, Vickers, Rockwell), resiliencia (péndulo de Charpy) y fatiga. Visual, interactivo y paso a paso.">
+	<meta name="twitter:image" content="https://gerardohmx.github.io/MaterialsTestingVirtualLab/assets/og-image.png">
+
+  <title>Laboratorio virtual · Ensayos mecánicos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style type="text/tailwindcss">
+    @layer components {
+      .inp { @apply w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200; }
+      .lbl { @apply mb-1 block text-xs font-medium text-slate-600; }
+      .card { @apply rounded-xl border border-slate-200 bg-white shadow-sm; }
+      .ctl { @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100 active:scale-95; }
+      .chip { @apply inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs text-slate-200; }
+      .sec { @apply mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500; }
+    }
+  </style>
+</head>
+<body class="flex min-h-screen flex-col bg-slate-100 text-slate-800 antialiased">
+
+<!-- ============================ HEADER ============================ -->
+<header class="bg-slate-900 text-white shadow-lg">
+  <div class="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-6 gap-y-2 px-4 pt-3">
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6M12 16v6M9 8h6v8H9z"/><path d="M5 5l-2 2 2 2M19 19l2-2-2-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="text-[11px] uppercase tracking-widest text-slate-400">Laboratorio virtual · Propiedades mecánicas</div>
+        <h1 id="hTitle" class="text-xl font-bold leading-tight">Ensayo de tracción</h1>
+      </div>
+    </div>
+
+    <nav class="ml-auto flex flex-wrap gap-1" aria-label="Tipo de ensayo">
+      <button id="tabTens" class="rounded-t-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900">Tracción</button>
+      <button id="tabHard" class="rounded-t-lg px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Dureza</button>
+      <button id="tabRes" class="rounded-t-lg px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Resiliencia</button>
+      <button id="tabFat" class="rounded-t-lg px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Fatiga</button>
+    </nav>
+    <button id="btnFs" class="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-3 py-1.5 text-sm font-semibold hover:bg-slate-800" title="Pantalla completa (F)">
+      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      <span id="fsLabel">Pantalla completa</span>
+    </button>
+  </div>
+
+  <div id="hdrTens" class="border-t border-slate-800 bg-slate-950/40">
+    <div class="mx-auto flex max-w-[1500px] flex-wrap items-center gap-2 px-4 py-2.5">
+      <span class="chip border-blue-500/50 text-blue-200"><b>Norma</b> <span id="hNorm">UNE 7-474</span></span>
+      <span class="chip"><b>Material</b> <span id="hMat">—</span></span>
+      <span class="chip"><b>Probeta</b> <span id="hSpec">—</span></span>
+      <span class="chip"><b>L₀</b> <span id="hL0">—</span></span>
+      <span class="chip"><b>S₀</b> <span id="hS0">—</span></span>
+      <span class="chip"><b>E</b> <span id="hE">—</span></span>
+      <span class="chip"><b>Re</b> <span id="hRe">—</span></span>
+      <span class="chip"><b>Rm</b> <span id="hRm">—</span></span>
+      <span class="chip"><b>v</b> <span id="hV">—</span></span>
+      <button id="btnCfg" class="ml-auto inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-semibold hover:bg-blue-500">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        Configurar ensayo
+      </button>
+    </div>
+  </div>
+
+  <div id="hdrHard" class="hidden border-t border-slate-800 bg-slate-950/40">
+    <div class="mx-auto flex max-w-[1500px] flex-wrap items-center gap-2 px-4 py-2.5">
+      <span class="chip border-blue-500/50 text-blue-200"><b>Norma</b> <span id="hhNorm">—</span></span>
+      <span class="chip"><b>Método</b> <span id="hhMethod">—</span></span>
+      <span class="chip"><b>Material</b> <span id="hhMat">—</span></span>
+      <span class="chip"><b>Penetrador</b> <span id="hhInd">—</span></span>
+      <span class="chip"><b>Carga</b> <span id="hhLoad">—</span></span>
+      <span class="chip"><b>Mantenim.</b> <span id="hhDwell">—</span></span>
+      <span class="chip"><b>Probeta</b> <span id="hhThk">—</span></span>
+      <button id="hBtnCfg" class="ml-auto inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-semibold hover:bg-blue-500">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        Configurar ensayo
+      </button>
+    </div>
+  </div>
+
+  <div id="hdrRes" class="hidden border-t border-slate-800 bg-slate-950/40">
+    <div class="mx-auto flex max-w-[1500px] flex-wrap items-center gap-2 px-4 py-2.5">
+      <span class="chip border-blue-500/50 text-blue-200"><b>Norma</b> UNE 36-403-81</span>
+      <span class="chip"><b>Péndulo</b> <span id="rhMach">—</span></span>
+      <span class="chip"><b>Material</b> <span id="rhMat">—</span></span>
+      <span class="chip"><b>Probeta</b> <span id="rhSpec">—</span></span>
+      <span class="chip"><b>Entalla</b> <span id="rhNotch">—</span></span>
+      <span class="chip"><b>Temperatura</b> <span id="rhT">—</span></span>
+      <span class="chip"><b>Requisito</b> <span id="rhKmin">—</span></span>
+      <button id="rBtnCfg" class="ml-auto inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-semibold hover:bg-blue-500">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        Configurar ensayo
+      </button>
+    </div>
+  </div>
+
+  <div id="hdrFat" class="hidden border-t border-slate-800 bg-slate-950/40">
+    <div class="mx-auto flex max-w-[1500px] flex-wrap items-center gap-2 px-4 py-2.5">
+      <span class="chip border-blue-500/50 text-blue-200"><b>Norma</b> <span id="fhNorm">—</span></span>
+      <span class="chip"><b>Método</b> <span id="fhMethod">—</span></span>
+      <span class="chip"><b>Material</b> <span id="fhMat">—</span></span>
+      <span class="chip"><b>Probeta</b> <span id="fhSpec">—</span></span>
+      <span class="chip"><b>Esfuerzo</b> <span id="fhLoad">—</span></span>
+      <span class="chip"><b>Frecuencia</b> <span id="fhFreq">—</span></span>
+      <span class="chip"><b>Defecto</b> <span id="fhDefect">—</span></span>
+      <button id="faBtnCfg" class="ml-auto inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-semibold hover:bg-blue-500">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        Configurar ensayo
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================= MAIN ============================= -->
+<main id="mainTens" class="mx-auto grid w-full max-w-[1500px] flex-1 gap-4 p-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+
+  <!-- ===== IZQUIERDA: simulación ===== -->
+  <section class="card flex flex-col p-4" aria-label="Simulación">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600">Simulación · Máquina de tracción</h2>
+      <span id="zoneBadge" class="rounded-full px-3 py-1 text-xs font-bold text-white" style="background:#2563eb">ZONA ELÁSTICA</span>
+    </div>
+
+    <!-- display de la máquina -->
+    <div class="mb-3 grid grid-cols-5 gap-2 rounded-lg bg-slate-900 p-2 font-mono text-center">
+      <div><div class="text-[10px] uppercase text-slate-400">Fuerza F</div><div class="text-base text-emerald-400 sm:text-lg"><span id="rF">0</span> <small class="text-xs">kN</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Alarg. ΔL</div><div class="text-base text-emerald-400 sm:text-lg"><span id="rDL">0</span> <small class="text-xs">mm</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Tensión σ</div><div class="text-base text-amber-300 sm:text-lg"><span id="rSig">0</span> <small class="text-xs">MPa</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Def. ε</div><div class="text-base text-amber-300 sm:text-lg"><span id="rEps">0</span> <small class="text-xs">%</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Tiempo</div><div class="text-base text-sky-300 sm:text-lg"><span id="rT">0:00</span></div></div>
+    </div>
+
+    <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+      <canvas id="cvSpec" class="block h-auto w-full"></canvas>
+    </div>
+    <p class="mt-1 text-[11px] leading-tight text-slate-500">Escala de deformación visual exagerada (no lineal) para poder apreciar la zona elástica; los valores numéricos son reales.</p>
+
+    <!-- zonas -->
+    <div id="zoneChips" class="mt-3 flex flex-wrap gap-1.5"></div>
+
+    <!-- controles -->
+    <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <input id="seek" type="range" min="0" max="1000" value="0" class="w-full accent-blue-600" aria-label="Progreso del ensayo">
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <button id="bStart" class="ctl" title="Ir al inicio (Inicio)"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+        <button id="bBack" class="ctl" title="Retroceder un paso (←)"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M11 5v14L2 12zM22 5v14l-9-7z"/></svg></button>
+        <button id="bRev" class="ctl" title="Reproducir hacia atrás"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M18 5v14L6 12z"/></svg></button>
+        <button id="bPlay" class="inline-flex h-9 min-w-[7rem] items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500 active:scale-95" title="Reproducir / Pausa (Espacio)">
+          <svg id="icPlay" viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg><span id="tPlay">Reproducir</span>
+        </button>
+        <button id="bFwd" class="ctl" title="Adelantar un paso (→)"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M13 5v14l9-7zM2 5v14l9-7z"/></svg></button>
+        <button id="bEnd" class="ctl" title="Ir al final (Fin)"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+        <label class="ml-auto flex items-center gap-2 text-xs text-slate-600">Velocidad
+          <select id="speed" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm">
+            <option value="0.25">0,25×</option><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <!-- explicación de la zona -->
+    <div id="explain" class="mt-3 rounded-lg border-l-4 bg-slate-50 p-3 text-sm leading-relaxed" style="border-color:#2563eb">
+      <div id="exTitle" class="mb-0.5 font-bold text-slate-800"></div>
+      <div id="exText" class="text-slate-600"></div>
+      <div id="exFormula" class="mt-1 font-mono text-[13px] font-semibold text-slate-800"></div>
+    </div>
+  </section>
+
+  <!-- ===== DERECHA: diagrama + análisis ===== -->
+  <section class="flex min-w-0 flex-col gap-4" aria-label="Análisis">
+    <div class="card p-4">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600">Diagrama de tracción</h2>
+        <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+          <div class="inline-flex overflow-hidden rounded-md border border-slate-300" role="group">
+            <button id="mSE" class="bg-blue-600 px-2.5 py-1 font-semibold text-white">σ – ε</button>
+            <button id="mFD" class="bg-white px-2.5 py-1 font-semibold text-slate-600 hover:bg-slate-100">F – ΔL</button>
+          </div>
+          <label class="flex cursor-pointer items-center gap-1.5"><input id="tZoom" type="checkbox" class="accent-blue-600"> Ampliar zona elástica</label>
+          <label class="flex cursor-pointer items-center gap-1.5"><input id="tNotes" type="checkbox" checked class="accent-blue-600"> Anotaciones</label>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <canvas id="cvDiag" class="block h-auto w-full"></canvas>
+      </div>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-2">
+      <!-- resultados -->
+      <div class="card p-4">
+        <h2 class="sec">Parámetros determinados</h2>
+        <div id="results" class="divide-y divide-slate-100 text-sm"></div>
+        <p class="mt-2 text-[11px] text-slate-400">Cada parámetro se «ilumina» cuando la simulación llega al punto del diagrama donde se obtiene.</p>
+      </div>
+
+      <!-- seguridad -->
+      <div class="card p-4">
+        <h2 class="sec">Tensión de trabajo y coeficiente de seguridad</h2>
+        <div id="safety" class="space-y-3 text-sm"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+
+<!-- ===================== MAIN · DUREZA ===================== -->
+<main id="mainHard" class="mx-auto hidden w-full max-w-[1500px] flex-1 gap-4 p-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+  <section class="card flex flex-col p-4" aria-label="Simulación de dureza">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600">Simulación · Durómetro</h2>
+      <span id="hBadge" class="rounded-full px-3 py-1 text-xs font-bold text-white" style="background:#64748b">APROXIMACIÓN</span>
+    </div>
+    <div class="mb-3 grid grid-cols-4 gap-2 rounded-lg bg-slate-900 p-2 text-center font-mono">
+      <div><div class="text-[10px] uppercase text-slate-400">Fuerza F</div><div class="text-base text-emerald-400 sm:text-lg"><span id="hF">0</span> <small class="text-xs">N</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Profundidad h</div><div class="text-base text-emerald-400 sm:text-lg"><span id="hH">0</span> <small class="text-xs">mm</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Tiempo</div><div class="text-base text-sky-300 sm:text-lg"><span id="hT">0:00</span></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400" id="hDLab">Huella</div><div class="text-base text-amber-300 sm:text-lg"><span id="hD">—</span></div></div>
+    </div>
+    <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-50"><canvas id="cvHSpec" class="block h-auto w-full"></canvas></div>
+    <p class="mt-1 text-[11px] leading-tight text-slate-500">Vista en sección ampliada: la escala se ajusta a la huella (el espesor de la probeta no está a escala).</p>
+    <div id="hChips" class="mt-3 flex flex-wrap gap-1.5"></div>
+    <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <input id="hSeek" type="range" min="0" max="1000" value="0" class="w-full accent-blue-600" aria-label="Progreso del ensayo">
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <button id="hbStart" class="ctl" title="Ir al inicio"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+        <button id="hbBack" class="ctl" title="Retroceder un paso"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M11 5v14L2 12zM22 5v14l-9-7z"/></svg></button>
+        <button id="hbRev" class="ctl" title="Reproducir hacia atrás"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M18 5v14L6 12z"/></svg></button>
+        <button id="hbPlay" class="inline-flex h-9 min-w-[7rem] items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500 active:scale-95">
+          <svg id="hIcPlay" viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg><span id="hTPlay">Reproducir</span>
+        </button>
+        <button id="hbFwd" class="ctl" title="Adelantar un paso"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M13 5v14l9-7zM2 5v14l9-7z"/></svg></button>
+        <button id="hbEnd" class="ctl" title="Ir al final"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+        <label class="ml-auto flex items-center gap-2 text-xs text-slate-600">Velocidad
+          <select id="hSpeed" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"><option value="0.25">0,25×</option><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        </label>
+      </div>
+    </div>
+    <div id="hExp" class="mt-3 rounded-lg border-l-4 bg-slate-50 p-3 text-sm leading-relaxed" style="border-color:#64748b">
+      <div id="hExTitle" class="mb-0.5 font-bold text-slate-800"></div>
+      <div id="hExText" class="text-slate-600"></div>
+      <div id="hExFormula" class="mt-1 font-mono text-[13px] font-semibold text-slate-800"></div>
+    </div>
+  </section>
+
+  <section class="flex min-w-0 flex-col gap-4" aria-label="Análisis de dureza">
+    <div id="hHero" class="card p-4"></div>
+
+    <div class="card p-4">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600">Registro del ensayo</h2>
+        <div class="inline-flex overflow-hidden rounded-md border border-slate-300 text-xs" role="group">
+          <button id="hmFt" class="bg-blue-600 px-2.5 py-1 font-semibold text-white">F – t</button>
+          <button id="hmFh" class="bg-white px-2.5 py-1 font-semibold text-slate-600 hover:bg-slate-100">F – h</button>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvHProc" class="block h-auto w-full"></canvas></div>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-2">
+      <div class="card p-4">
+        <h2 class="sec" id="hRelTitle">Dureza frente a la huella</h2>
+        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvHRel" class="block h-auto w-full"></canvas></div>
+        <p id="hSens" class="mt-2 text-xs leading-relaxed text-slate-600"></p>
+      </div>
+      <div class="card p-4">
+        <h2 class="sec">Parámetros del ensayo</h2>
+        <div id="hParams" class="divide-y divide-slate-100 text-sm"></div>
+      </div>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-2">
+      <div class="card p-4">
+        <h2 class="sec">Condiciones de validez del ensayo</h2>
+        <div id="hChecks" class="space-y-2 text-sm"></div>
+      </div>
+      <div class="flex flex-col gap-4">
+        <div class="card p-4">
+          <h2 class="sec">Equivalencias y posición del material</h2>
+          <div id="hEq" class="mb-3 grid grid-cols-3 gap-2 text-center text-sm"></div>
+          <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvHScale" class="block h-auto w-full"></canvas></div>
+          <p class="mt-2 text-[11px] text-slate-400">Conversiones orientativas (tablas para aceros); fuera de ese campo se indica «—».</p>
+        </div>
+        <div class="card p-4">
+          <h2 class="sec">Condiciones de ensayo recomendadas</h2>
+          <ul id="hReco" class="list-inside list-disc space-y-1 text-sm text-slate-700"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== MAIN · RESILIENCIA ===================== -->
+<main id="mainRes" class="mx-auto hidden w-full max-w-[1500px] flex-1 gap-4 p-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+  <section class="card flex flex-col p-4" aria-label="Simulación del péndulo de Charpy">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600">Simulación · Péndulo de Charpy</h2>
+      <span id="rBadge" class="rounded-full px-3 py-1 text-xs font-bold text-white" style="background:#0ea5e9">ACONDICIONAMIENTO</span>
+    </div>
+    <div class="mb-3 grid grid-cols-4 gap-2 rounded-lg bg-slate-900 p-2 text-center font-mono">
+      <div><div class="text-[10px] uppercase text-slate-400">Ángulo θ</div><div class="text-base text-emerald-400 sm:text-lg"><span id="rA">0</span> <small class="text-xs">°</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Velocidad v</div><div class="text-base text-emerald-400 sm:text-lg"><span id="rV">0,00</span> <small class="text-xs">m/s</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">T probeta</div><div class="text-base text-sky-300 sm:text-lg"><span id="rTs">20</span> <small class="text-xs">°C</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Energía absorbida K</div><div class="text-base text-amber-300 sm:text-lg"><span id="rK">—</span> <small class="text-xs">J</small></div></div>
+    </div>
+    <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-50"><canvas id="cvRSpec" class="block h-auto w-full"></canvas></div>
+    <p class="mt-1 text-[11px] leading-tight text-slate-500">Arriba, el péndulo a escala; abajo, el detalle ampliado de la probeta en vista de planta (el impacto real dura milisegundos: se muestra a cámara lenta).</p>
+    <div id="rChips" class="mt-3 flex flex-wrap gap-1.5"></div>
+    <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <input id="rSeek" type="range" min="0" max="1000" value="0" class="w-full accent-blue-600" aria-label="Progreso del ensayo">
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <button id="rbStart" class="ctl" title="Ir al inicio"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+        <button id="rbBack" class="ctl" title="Retroceder un paso"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M11 5v14L2 12zM22 5v14l-9-7z"/></svg></button>
+        <button id="rbRev" class="ctl" title="Reproducir hacia atrás"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M18 5v14L6 12z"/></svg></button>
+        <button id="rbPlay" class="inline-flex h-9 min-w-[7rem] items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500 active:scale-95">
+          <svg id="rIcPlay" viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg><span id="rTPlay">Reproducir</span>
+        </button>
+        <button id="rbFwd" class="ctl" title="Adelantar un paso"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M13 5v14l9-7zM2 5v14l9-7z"/></svg></button>
+        <button id="rbEnd" class="ctl" title="Ir al final"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+        <label class="ml-auto flex items-center gap-2 text-xs text-slate-600">Velocidad
+          <select id="rSpeed" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"><option value="0.25">0,25×</option><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        </label>
+      </div>
+    </div>
+    <div id="rExp" class="mt-3 rounded-lg border-l-4 bg-slate-50 p-3 text-sm leading-relaxed" style="border-color:#0ea5e9">
+      <div id="rExTitle" class="mb-0.5 font-bold text-slate-800"></div>
+      <div id="rExText" class="text-slate-600"></div>
+      <div id="rExFormula" class="mt-1 font-mono text-[13px] font-semibold text-slate-800"></div>
+    </div>
+  </section>
+
+  <section class="flex min-w-0 flex-col gap-4" aria-label="Análisis de resiliencia">
+    <div id="rHero" class="card p-4"></div>
+
+    <div class="card p-4">
+      <h2 class="mb-2 text-sm font-bold uppercase tracking-wider text-slate-600">Balance de energía del péndulo</h2>
+      <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvREn" class="block h-auto w-full"></canvas></div>
+      <p class="mt-2 text-xs text-slate-500">La energía que falta tras el impacto (zona roja) es la absorbida por la probeta: K = m·g·L·(cos β − cos α).</p>
+    </div>
+
+    <div class="card p-4">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600">Curva de transición dúctil-frágil</h2>
+        <div class="flex flex-wrap gap-1.5 text-xs">
+          <button id="rbReg" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100">+ Registrar este ensayo</button>
+          <button id="rbSeries" class="rounded-md bg-blue-600 px-2.5 py-1 font-semibold text-white hover:bg-blue-500">Simular serie de temperaturas</button>
+          <button id="rbClear" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-500 hover:bg-slate-100">Borrar</button>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvRTr" class="block h-auto w-full"></canvas></div>
+      <p id="rTrInfo" class="mt-2 text-xs leading-relaxed text-slate-600"></p>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-2">
+      <div class="card p-4">
+        <h2 class="sec">Superficie de fractura</h2>
+        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvRFrac" class="block h-auto w-full"></canvas></div>
+        <p id="rFracInfo" class="mt-2 text-xs leading-relaxed text-slate-600"></p>
+      </div>
+      <div class="card p-4">
+        <h2 class="sec">Parámetros del ensayo</h2>
+        <div id="rParams" class="divide-y divide-slate-100 text-sm"></div>
+      </div>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-2">
+      <div class="card p-4"><h2 class="sec">Condiciones de validez del ensayo</h2><div id="rChecks" class="space-y-2 text-sm"></div></div>
+      <div class="card p-4"><h2 class="sec">Interpretación y recomendaciones</h2><ul id="rReco" class="list-inside list-disc space-y-1.5 text-sm text-slate-700"></ul></div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== MAIN · FATIGA ===================== -->
+<main id="mainFat" class="mx-auto hidden w-full max-w-[1500px] flex-1 gap-4 p-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+  <section class="card flex flex-col p-4" aria-label="Simulación de fatiga">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600">Simulación · Máquina de fatiga en voladizo</h2>
+      <span id="faBadge" class="rounded-full px-3 py-1 text-xs font-bold text-white" style="background:#64748b">MONTAJE Y CARGA</span>
+    </div>
+    <div class="mb-3 grid grid-cols-4 gap-2 rounded-lg bg-slate-900 p-2 text-center font-mono">
+      <div><div class="text-[10px] uppercase text-slate-400">Ciclos N</div><div class="text-base text-emerald-400 sm:text-lg" id="faN">0</div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Frecuencia</div><div class="text-base text-sky-300 sm:text-lg"><span id="faHz">50</span> <small class="text-xs">Hz</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400" id="faSLab">Amplitud σa</div><div class="text-base text-amber-300 sm:text-lg"><span id="faS">0</span> <small class="text-xs">MPa</small></div></div>
+      <div><div class="text-[10px] uppercase text-slate-400">Tiempo real</div><div class="text-base text-sky-300 sm:text-lg" id="faT">0:00</div></div>
+    </div>
+    <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-50"><canvas id="cvFaSpec" class="block h-auto w-full"></canvas></div>
+
+    <div class="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-3">
+      <div class="mb-1 flex items-center justify-between text-xs"><label for="faFreq" class="font-semibold text-sky-900">Frecuencia de giro del motor (frecuencia de los esfuerzos)</label><span class="font-mono font-bold text-sky-900"><span id="faFreqTxt">50</span> Hz · <span id="faRpm">3000</span> rpm</span></div>
+      <input id="faFreq" type="range" min="5" max="200" step="1" value="50" class="w-full accent-sky-600" aria-label="Frecuencia del motor">
+      <div class="mt-1 flex gap-1.5 text-xs"><button type="button" class="faPre rounded border border-sky-300 bg-white px-2 py-0.5 hover:bg-sky-100" data-f="10">10 Hz</button><button type="button" class="faPre rounded border border-sky-300 bg-white px-2 py-0.5 hover:bg-sky-100" data-f="25">25 Hz</button><button type="button" class="faPre rounded border border-sky-300 bg-white px-2 py-0.5 hover:bg-sky-100" data-f="50">50 Hz</button><button type="button" class="faPre rounded border border-sky-300 bg-white px-2 py-0.5 hover:bg-sky-100" data-f="100">100 Hz</button><span class="ml-auto text-sky-800">1 vuelta = 1 ciclo tracción-compresión</span></div>
+    </div>
+
+    <div id="faChips" class="mt-3 flex flex-wrap gap-1.5"></div>
+    <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <input id="faSeek" type="range" min="0" max="1000" value="0" class="w-full accent-blue-600" aria-label="Progreso del ensayo">
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <button id="fabStart" class="ctl" title="Ir al inicio"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+        <button id="fabBack" class="ctl" title="Retroceder un paso"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M11 5v14L2 12zM22 5v14l-9-7z"/></svg></button>
+        <button id="fabRev" class="ctl" title="Reproducir hacia atrás"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M18 5v14L6 12z"/></svg></button>
+        <button id="fabPlay" class="inline-flex h-9 min-w-[7rem] items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500 active:scale-95">
+          <svg id="faIcPlay" viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg><span id="faTPlay">Reproducir</span>
+        </button>
+        <button id="fabFwd" class="ctl" title="Adelantar un paso"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M13 5v14l9-7zM2 5v14l9-7z"/></svg></button>
+        <button id="fabEnd" class="ctl" title="Ir al final"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+        <label class="ml-auto flex items-center gap-2 text-xs text-slate-600">Velocidad
+          <select id="faSpeed" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"><option value="0.25">0,25×</option><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        </label>
+      </div>
+    </div>
+    <div id="faExp" class="mt-3 rounded-lg border-l-4 bg-slate-50 p-3 text-sm leading-relaxed" style="border-color:#64748b">
+      <div id="faExTitle" class="mb-0.5 font-bold text-slate-800"></div>
+      <div id="faExText" class="text-slate-600"></div>
+      <div id="faExFormula" class="mt-1 font-mono text-[13px] font-semibold text-slate-800"></div>
+    </div>
+  </section>
+
+  <section class="flex min-w-0 flex-col gap-4" aria-label="Análisis de fatiga">
+    <div id="faHero" class="card p-4"></div>
+
+    <div class="card p-4">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600">Curva de Wöhler (S – N)</h2>
+        <div class="flex flex-wrap gap-1.5 text-xs">
+          <button id="fabReg" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100">+ Registrar este ensayo</button>
+          <button id="fabSeries" class="rounded-md bg-blue-600 px-2.5 py-1 font-semibold text-white hover:bg-blue-500">Simular serie de probetas</button>
+          <button id="fabClear" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-500 hover:bg-slate-100">Borrar</button>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvFaSN" class="block h-auto w-full"></canvas></div>
+      <p id="faSNInfo" class="mt-2 text-xs leading-relaxed text-slate-600"></p>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-2">
+      <div class="card p-4">
+        <h2 class="sec">Superficie de rotura</h2>
+        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvFaFrac" class="block h-auto w-full"></canvas></div>
+        <p id="faFracInfo" class="mt-2 text-xs leading-relaxed text-slate-600"></p>
+      </div>
+      <div class="card p-4"><h2 class="sec">Parámetros del ensayo</h2><div id="faParams" class="divide-y divide-slate-100 text-sm"></div></div>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-2">
+      <div class="card p-4">
+        <h2 class="sec">Evolución de la grieta</h2>
+        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white"><canvas id="cvFaCrack" class="block h-auto w-full"></canvas></div>
+      </div>
+      <div class="card p-4"><h2 class="sec">Condiciones del ensayo</h2><div id="faChecks" class="space-y-2 text-sm"></div></div>
+    </div>
+    <div class="card p-4"><h2 class="sec">Interpretación y recomendaciones</h2><ul id="faReco" class="list-inside list-disc space-y-1.5 text-sm text-slate-700"></ul></div>
+  </section>
+</main>
+
+<!-- ============================= FOOTER ============================= -->
+<footer class="mt-2 bg-slate-900 text-slate-300">
+  <div class="mx-auto max-w-[1500px] px-4 py-5">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-white">Vocabulario y fórmulas</h2>
+      <button id="ftToggle" class="rounded-md border border-slate-600 px-2.5 py-1 text-xs hover:bg-slate-800">Ocultar</button>
+    </div>
+    <div id="ftBody" class="grid gap-6 lg:grid-cols-2">
+      <div>
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-blue-300">Fórmulas y sus elementos</h3>
+        <dl id="ftFormulas" class="space-y-2 text-sm"></dl>
+      </div>
+      <div>
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-300">Vocabulario</h3>
+        <dl id="ftVocab" class="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2"></dl>
+      </div>
+    </div>
+  
+    <p class="license mt-6 border-t border-slate-700 pt-4 text-center text-sm text-slate-400" xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/">
+        <a property="dct:title" rel="cc:attributionURL" href="https://gerardohmx.github.io/MaterialsTestingVirtualLab" class="text-blue-300 hover:underline">Realizado</a>
+        por
+        <a rel="cc:attributionURL dct:creator" property="cc:attributionName" href="https://github.com/GerardoHMX" class="text-blue-300 hover:underline">Gerardo Huizar Castro</a>
+        es bajo licencia <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" class="whitespace-nowrap">
+            <img class="inline" style="display:inline!important;height:22px!important;width:auto!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt="CC">
+            <img class="inline" style="display:inline!important;height:22px!important;width:auto!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt="BY">
+            <img class="inline" style="display:inline!important;height:22px!important;width:auto!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt="NC">
+            <img class="inline" style="display:inline!important;height:22px!important;width:auto!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt="SA">
+        </a>
+    </p>
+  </div>
+</footer>
+
+<!-- ============================ CONFIGURACIÓN ============================ -->
+<dialog id="cfg" class="m-auto w-[min(1100px,96vw)] rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/70">
+  <form id="cfgForm" method="dialog" class="flex max-h-[92vh] flex-col">
+    <div class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+      <div>
+        <h2 class="text-lg font-bold">Configurar ensayo</h2>
+        <p class="text-xs text-slate-500">Elige el ensayo, define la probeta, el material y los criterios de seguridad.</p>
+      </div>
+      <button type="button" id="cfgClose" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="grid flex-1 gap-5 overflow-y-auto p-5 md:grid-cols-2 lg:grid-cols-4">
+      <!-- 1 ensayo -->
+      <div>
+        <h3 class="sec">1 · Ensayo</h3>
+        <div class="space-y-2 text-sm">
+          <label class="flex items-center gap-2 rounded-lg border-2 border-blue-500 bg-blue-50 p-2.5 font-semibold"><input type="radio" checked class="accent-blue-600"> Tracción <span class="ml-auto text-[10px] font-normal text-blue-700">UNE 7-474</span></label>
+          <div class="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5 text-slate-400">○ Dureza <span class="ml-auto text-[10px] text-blue-600">en su pestaña</span></div>
+          <div class="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5 text-slate-400">○ Resiliencia <span class="ml-auto text-[10px] text-blue-600">en su pestaña</span></div>
+          <div class="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5 text-slate-400">○ Fatiga <span class="ml-auto text-[10px] text-blue-600">en su pestaña</span></div>
+        </div>
+        <div class="mt-4">
+          <label class="lbl" for="vel">Velocidad de la cruceta (mm/min)</label>
+          <input id="vel" type="number" min="0.1" step="any" value="5" class="inp">
+          <p class="mt-1 text-[11px] text-slate-400">Solo afecta al «tiempo real» mostrado en la máquina.</p>
+        </div>
+      </div>
+
+      <!-- 2 probeta -->
+      <div>
+        <h3 class="sec">2 · Probeta</h3>
+        <div class="mb-3 grid grid-cols-2 gap-2 text-sm">
+          <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 p-2 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"><input type="radio" name="shape" value="cyl" checked class="accent-blue-600"> Cilíndrica</label>
+          <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 p-2 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"><input type="radio" name="shape" value="prism" class="accent-blue-600"> Prismática</label>
+        </div>
+        <div id="fCyl"><label class="lbl" for="d0">Diámetro d₀ (mm)</label><input id="d0" type="number" min="3" max="40" step="any" value="10" class="inp"></div>
+        <div id="fPrism" class="hidden grid-cols-2 gap-2">
+          <div><label class="lbl" for="a0">Espesor a₀ (mm)</label><input id="a0" type="number" min="1" max="30" step="any" value="5" class="inp"></div>
+          <div><label class="lbl" for="b0">Ancho b₀ (mm)</label><input id="b0" type="number" min="3" max="60" step="any" value="20" class="inp"></div>
+        </div>
+        <div class="mt-3">
+          <label class="lbl" for="kSel">Probeta proporcional · L₀ = k·√S₀</label>
+          <select id="kSel" class="inp"><option value="5.65">k = 5,65 (normal)</option><option value="11.3">k = 11,3 (larga)</option></select>
+        </div>
+        <div class="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-2 text-center text-xs">
+          <div><div class="text-slate-400">S₀</div><div id="pvS0" class="font-mono font-semibold">—</div></div>
+          <div><div class="text-slate-400">L₀</div><div id="pvL0" class="font-mono font-semibold">—</div></div>
+          <div><div class="text-slate-400">Lc mín.</div><div id="pvLc" class="font-mono font-semibold">—</div></div>
+        </div>
+      </div>
+
+      <!-- 3 material -->
+      <div>
+        <h3 class="sec">3 · Material</h3>
+        <label class="lbl" for="matSel">Material (precarga valores típicos)</label>
+        <select id="matSel" class="inp"></select>
+        <label class="lbl mt-3" for="mKind">Comportamiento</label>
+        <select id="mKind" class="inp">
+          <option value="yield">Dúctil con fluencia definida (acero)</option>
+          <option value="smooth">Dúctil sin fluencia definida (Rp0,2)</option>
+          <option value="brittle">Frágil (rotura sin plastificar)</option>
+        </select>
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <div><label class="lbl" for="mE">E (GPa)</label><input id="mE" type="number" min="1" step="any" class="inp"></div>
+          <div id="gRe"><label id="lRe" class="lbl" for="mRe">ReH (MPa)</label><input id="mRe" type="number" min="1" step="any" class="inp"></div>
+          <div id="gReL"><label class="lbl" for="mReL">ReL (MPa)</label><input id="mReL" type="number" min="1" step="any" class="inp"></div>
+          <div><label class="lbl" for="mRm">Rm (MPa)</label><input id="mRm" type="number" min="1" step="any" class="inp"></div>
+          <div><label class="lbl" for="mA">A rotura (%)</label><input id="mA" type="number" min="0.1" step="any" class="inp"></div>
+          <div id="gZ"><label class="lbl" for="mZ">Z estricción (%)</label><input id="mZ" type="number" min="0" max="90" step="any" class="inp"></div>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-400">Valores típicos orientativos; puedes editarlos con los de tu catálogo.</p>
+      </div>
+
+      <!-- 4 seguridad -->
+      <div>
+        <h3 class="sec">4 · Seguridad</h3>
+        <label class="lbl" for="nSeg">Coeficiente de seguridad n requerido</label>
+        <input id="nSeg" type="number" min="1" step="any" value="2" class="inp">
+        <label class="lbl mt-3" for="sTrab">Tensión de trabajo prevista σ<sub>trab</sub> (MPa)</label>
+        <input id="sTrab" type="number" min="0" step="any" class="inp">
+        <div class="mt-3 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
+          σ<sub>adm</sub> = Re / n<br>Para que la pieza trabaje siempre en la <b>zona elástica</b> (Ley de Hooke) la tensión de trabajo no debe superar σ<sub>adm</sub>. En materiales frágiles se usa Rm.
+        </div>
+      </div>
+    </div>
+
+    <div id="cfgErr" class="hidden border-t border-red-200 bg-red-50 px-5 py-2 text-sm text-red-700"></div>
+    <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
+      <button type="button" id="cfgCancel" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Cancelar</button>
+      <button type="submit" id="cfgGo" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-bold text-white hover:bg-blue-500">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg> Calcular y simular
+      </button>
+    </div>
+  </form>
+</dialog>
+
+
+<dialog id="cfgH" class="m-auto w-[min(1100px,96vw)] rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/70">
+  <form id="hForm" method="dialog" class="flex max-h-[92vh] flex-col">
+    <div class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+      <div><h2 class="text-lg font-bold">Configurar ensayo de dureza</h2><p class="text-xs text-slate-500">Elige el método, las condiciones de ensayo y el material.</p></div>
+      <button type="button" id="hClose" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="grid flex-1 gap-5 overflow-y-auto p-5 md:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <h3 class="sec">1 · Método de ensayo</h3>
+        <div class="space-y-2 text-sm">
+          <label class="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-300 p-2.5 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"><input type="radio" name="hmethod" value="brinell" checked class="mt-1 accent-blue-600"><span><b>Brinell</b> (HBW)<br><span class="text-xs text-slate-500">Bola de metal duro · UNE 7-422-85</span></span></label>
+          <label class="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-300 p-2.5 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"><input type="radio" name="hmethod" value="vickers" class="mt-1 accent-blue-600"><span><b>Vickers</b> (HV)<br><span class="text-xs text-slate-500">Pirámide de diamante 136° · UNE 7-423-84</span></span></label>
+          <label class="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-300 p-2.5 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"><input type="radio" name="hmethod" value="rockwell" class="mt-1 accent-blue-600"><span><b>Rockwell</b> (HRA · HRB · HRC)<br><span class="text-xs text-slate-500">Cono de diamante / bola de acero · UNE 7-424-89</span></span></label>
+        </div>
+      </div>
+      <div>
+        <h3 class="sec">2 · Condiciones del ensayo</h3>
+        <div id="hgBr" class="space-y-3">
+          <div><label class="lbl" for="hDia">Diámetro de la bola D (mm)</label><select id="hDia" class="inp"><option>10</option><option>5</option><option>2.5</option><option>2</option><option>1</option></select></div>
+          <div><label class="lbl" for="hK">Relación de carga k = 0,102·F / D²</label><select id="hK" class="inp"><option>30</option><option>15</option><option>10</option><option>5</option><option>2.5</option><option>1</option></select></div>
+          <div class="rounded-lg bg-slate-50 p-2 text-center text-xs">Designación: <b id="hBrDes" class="font-mono"></b> · F = <b id="hBrF" class="font-mono"></b></div>
+        </div>
+        <div id="hgVk" class="hidden space-y-3">
+          <div><label class="lbl" for="hFk">Carga de ensayo F (kgf)</label><select id="hFk" class="inp"><option>0.2</option><option>1</option><option>5</option><option>10</option><option>20</option><option selected>30</option><option>50</option><option>100</option></select></div>
+          <div class="rounded-lg bg-slate-50 p-2 text-center text-xs">Designación: <b id="hVkDes" class="font-mono"></b> · F = <b id="hVkF" class="font-mono"></b></div>
+        </div>
+        <div id="hgRk" class="hidden space-y-3">
+          <div><label class="lbl" for="hScale">Escala Rockwell</label><select id="hScale" class="inp"><option value="C">HRC · cono de diamante · 1471 N (150 kgf)</option><option value="B">HRB · bola Ø1/16" · 980,7 N (100 kgf)</option><option value="A">HRA · cono de diamante · 588,4 N (60 kgf)</option></select></div>
+          <div id="hScaleHint" class="rounded-lg border p-2 text-xs leading-relaxed"></div>
+          <div class="rounded-lg bg-slate-50 p-2 text-xs leading-relaxed">Precarga F₀ = 98,07 N (10 kgf) en todas las escalas. HR = 100 − e (HRA, HRC) · HR = 130 − e (HRB), con e en unidades de 0,002 mm.</div>
+        </div>
+        <div class="mt-3"><label class="lbl" for="hDwell">Tiempo de mantenimiento de la carga (s)</label><input id="hDwell" type="number" min="1" max="60" step="any" value="15" class="inp"></div>
+      </div>
+      <div>
+        <h3 class="sec">3 · Material y probeta</h3>
+        <label class="lbl" for="hMatSel">Material</label><select id="hMatSel" class="inp"></select>
+        <label class="lbl mt-3" for="hHV">Dureza del material (HV)</label>
+        <input id="hHV" type="number" min="5" max="1500" step="any" class="inp">
+        <p class="mt-1 text-[11px] text-slate-500">Equivale a <b id="hHVeq">—</b> en el método elegido (orientativo).</p>
+        <div class="mt-3 grid grid-cols-3 gap-2">
+          <div><label class="lbl" for="hThk">Espesor (mm)</label><input id="hThk" type="number" min="0.1" step="any" value="15" class="inp"></div>
+          <div><label class="lbl" for="hEdge">Al borde (mm)</label><input id="hEdge" type="number" min="0.1" step="any" value="20" class="inp"></div>
+          <div><label class="lbl" for="hSpc">Entre huellas (mm)</label><input id="hSpc" type="number" min="0.1" step="any" value="30" class="inp"></div>
+        </div>
+        <p class="mt-1 text-[11px] text-slate-500">Se usan para comprobar la validez del ensayo.</p>
+      </div>
+    </div>
+    <div id="hErr" class="hidden border-t border-red-200 bg-red-50 px-5 py-2 text-sm text-red-700"></div>
+    <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
+      <button type="button" id="hCancel" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Cancelar</button>
+      <button type="submit" id="hGo" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-bold text-white hover:bg-blue-500"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg> Calcular y simular</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="cfgR" class="m-auto w-[min(1100px,96vw)] rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/70">
+  <form id="rForm" method="dialog" class="flex max-h-[92vh] flex-col">
+    <div class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+      <div><h2 class="text-lg font-bold">Configurar ensayo de resiliencia</h2><p class="text-xs text-slate-500">Péndulo de Charpy · UNE 36-403-81</p></div>
+      <button type="button" id="rClose" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="grid flex-1 gap-5 overflow-y-auto p-5 md:grid-cols-2 lg:grid-cols-4">
+      <div>
+        <h3 class="sec">1 · Péndulo</h3>
+        <label class="lbl" for="rCap">Energía inicial (capacidad)</label>
+        <select id="rCap" class="inp"><option value="300">300 J</option><option value="150">150 J</option></select>
+        <label class="lbl mt-3" for="rStr">Radio del percutor</label>
+        <select id="rStr" class="inp"><option value="2">R = 2 mm (KV₂)</option><option value="8">R = 8 mm (KV₈)</option></select>
+        <div class="mt-3 rounded-lg bg-slate-50 p-2.5 text-xs leading-relaxed text-slate-600">Longitud L = 0,80 m · ángulo inicial α = 140°. La masa se ajusta a la capacidad para una velocidad de impacto ≈ 5,3 m/s.</div>
+      </div>
+      <div>
+        <h3 class="sec">2 · Probeta</h3>
+        <label class="lbl" for="rNotch">Entalla</label>
+        <select id="rNotch" class="inp"><option value="V">En V (KV) · 2 mm de profundidad</option><option value="U">En U (KU) · 5 mm de profundidad</option></select>
+        <label class="lbl mt-3" for="rWid">Ancho B de la probeta</label>
+        <select id="rWid" class="inp"><option value="10">10 mm (normal)</option><option value="7.5">7,5 mm (reducida)</option><option value="5">5 mm (reducida)</option></select>
+        <div class="mt-3 rounded-lg bg-slate-50 p-2.5 text-xs leading-relaxed text-slate-600">Probeta 10 × B × 55 mm · luz entre apoyos 40 mm.<br>Sección bajo la entalla S₀ = <b id="rS0">—</b>.</div>
+      </div>
+      <div>
+        <h3 class="sec">3 · Material</h3>
+        <label class="lbl" for="rMatSel">Material (precarga valores típicos)</label><select id="rMatSel" class="inp"></select>
+        <label class="lbl mt-3" for="rKind">Comportamiento</label>
+        <select id="rKind" class="inp"><option value="transition">Con transición dúctil-frágil (acero ferrítico)</option><option value="flat">Sin transición (K casi constante)</option></select>
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <div><label class="lbl" for="rKup">K meseta alta (J)</label><input id="rKup" type="number" min="0.5" step="any" class="inp"></div>
+          <div id="rgLow"><label class="lbl" for="rKlow">K meseta baja (J)</label><input id="rKlow" type="number" min="0.5" step="any" class="inp"></div>
+          <div id="rgTt"><label class="lbl" for="rTt">T transición (°C)</label><input id="rTt" type="number" step="any" class="inp"></div>
+          <div id="rgC"><label class="lbl" for="rC">Anchura (°C)</label><input id="rC" type="number" min="3" step="any" class="inp"></div>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-400">Valores típicos para entalla en V y probeta de 10 mm; orientativos.</p>
+      </div>
+      <div>
+        <h3 class="sec">4 · Condiciones del ensayo</h3>
+        <label class="lbl" for="rTemp">Temperatura de ensayo (°C)</label><input id="rTemp" type="number" min="-196" max="600" step="any" value="20" class="inp">
+        <label class="lbl mt-3" for="rTrans">Tiempo de traslado baño → apoyos (s)</label><input id="rTrans" type="number" min="0.5" max="30" step="any" value="4" class="inp">
+        <label class="lbl mt-3" for="rKmin">Energía mínima exigida KV (J)</label><input id="rKmin" type="number" min="1" step="any" value="27" class="inp">
+        <p class="mt-2 text-[11px] text-slate-500">Máx. 5 s de traslado. El requisito (p. ej. 27 J) se compara con la energía absorbida.</p>
+      </div>
+    </div>
+    <div id="rErr" class="hidden border-t border-red-200 bg-red-50 px-5 py-2 text-sm text-red-700"></div>
+    <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
+      <button type="button" id="rCancel" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Cancelar</button>
+      <button type="submit" id="rGo" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-bold text-white hover:bg-blue-500"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg> Calcular y simular</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="cfgF" class="m-auto w-[min(1100px,96vw)] rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/70">
+  <form id="faForm" method="dialog" class="flex max-h-[92vh] flex-col">
+    <div class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+      <div><h2 class="text-lg font-bold">Configurar ensayo de fatiga</h2><p class="text-xs text-slate-500">Dispositivo de probeta en voladizo con motor de frecuencia regulable</p></div>
+      <button type="button" id="faClose" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="grid flex-1 gap-5 overflow-y-auto p-5 md:grid-cols-2 lg:grid-cols-4">
+      <div>
+        <h3 class="sec">1 · Método de ensayo</h3>
+        <div class="space-y-2 text-sm">
+          <label class="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-300 p-2.5 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"><input type="radio" name="fmethod" value="bend" checked class="mt-1 accent-blue-600"><span><b>Flexión rotativa</b><br><span class="text-xs text-slate-500">Probeta en voladizo que gira con carga fija: cada fibra alterna tracción y compresión.</span></span></label>
+          <label class="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-300 p-2.5 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"><input type="radio" name="fmethod" value="torsion" class="mt-1 accent-blue-600"><span><b>Torsión alternativa</b><br><span class="text-xs text-slate-500">Probeta en voladizo con palanca accionada por una excéntrica: par alterno ±T.</span></span></label>
+        </div>
+        <label class="lbl mt-4" for="faNorm">Norma de referencia (opcional)</label>
+        <input id="faNorm" type="text" maxlength="40" placeholder="p. ej. la que indique tu guía" class="inp">
+      </div>
+      <div>
+        <h3 class="sec">2 · Probeta</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="lbl" for="faD">Diámetro d (mm)</label><input id="faD" type="number" min="3" max="30" step="any" value="8" class="inp"></div>
+          <div><label class="lbl" for="faL">Brazo L (mm)</label><input id="faL" type="number" min="20" max="400" step="any" value="100" class="inp"></div>
+        </div>
+        <label class="lbl mt-3" for="faFinish">Acabado superficial</label>
+        <select id="faFinish" class="inp"><option value="polished">Pulido espejo (k_a = 1,00)</option><option value="ground">Rectificado (k_a = 0,92)</option><option value="turned">Torneado (k_a = 0,80)</option></select>
+        <label class="lbl mt-3" for="faDefect">Punto defectuoso de partida</label>
+        <select id="faDefect" class="inp"><option value="none">Sin defecto (superficie pulida)</option><option value="scratch">Rayado superficial (K_f = 1,6)</option><option value="incl">Inclusión bajo la superficie (K_f = 1,3)</option><option value="notch">Entalla circunferencial (K_f = 2,2)</option></select>
+        <p class="mt-2 text-[11px] text-slate-500">L es el brazo de la carga respecto de la sección crítica (flexión) o de la palanca (torsión).</p>
+      </div>
+      <div>
+        <h3 class="sec">3 · Material</h3>
+        <label class="lbl" for="faMatSel">Material (precarga valores típicos)</label><select id="faMatSel" class="inp"></select>
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <div><label class="lbl" for="faRm">Rm (MPa)</label><input id="faRm" type="number" min="50" step="any" class="inp"></div>
+          <div><label class="lbl" for="faSe" id="faSeLbl">Límite de fatiga (MPa)</label><input id="faSe" type="number" min="10" step="any" class="inp"></div>
+        </div>
+        <label class="lbl mt-3" for="faKind">Comportamiento a fatiga</label>
+        <select id="faKind" class="inp"><option value="ferrous">Con límite de fatiga (aceros, fundición, titanio)</option><option value="nonferrous">Sin límite definido (aluminio, cobre, latón)</option></select>
+        <p class="mt-2 text-[11px] text-slate-500">Se = límite de fatiga en flexión rotativa (probeta pulida). En materiales sin límite, Se es la resistencia a 5·10⁸ ciclos.</p>
+      </div>
+      <div>
+        <h3 class="sec">4 · Esfuerzo y frecuencia</h3>
+        <label class="lbl" for="faSa" id="faSaLbl">Amplitud de tensión σa (MPa)</label><input id="faSa" type="number" min="1" step="any" value="300" class="inp">
+        <label class="lbl mt-3" for="faFreqCfg">Frecuencia de giro del motor (Hz)</label><input id="faFreqCfg" type="number" min="5" max="200" step="any" value="50" class="inp">
+        <div class="mt-3 rounded-lg bg-slate-50 p-2.5 text-xs leading-relaxed text-slate-600">
+          <div id="faPrevLoad">—</div><div id="faPrevEq" class="mt-1">—</div>
+        </div>
+      </div>
+    </div>
+    <div id="faErr" class="hidden border-t border-red-200 bg-red-50 px-5 py-2 text-sm text-red-700"></div>
+    <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
+      <button type="button" id="faCancel" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Cancelar</button>
+      <button type="submit" id="faGo" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-bold text-white hover:bg-blue-500"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg> Calcular y simular</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="js/model.js"></script>
+<script src="js/app.js"></script>
+<script src="js/tabs.js"></script>
+<script src="js/hardness-model.js"></script>
+<script src="js/hardness.js"></script>
+<script src="js/resilience-model.js"></script>
+<script src="js/resilience.js"></script>
+<script src="js/fatigue-model.js"></script>
+<script src="js/fatigue.js"></script>
+</body>
+</html>
